@@ -122,7 +122,7 @@ def detrend(dataset,campaign=5,splits=None,quiet=False,save_dir='.',seed=0,flux_
         ## Iterative sigma-clipping
         ## ------------------------
         print('Starting initial outlier detection')
-        omask = mask & sigma_clip(cflux, max_iter=10, max_sigma=5, mexc=mask)
+        omask = mask & sigma_clip(cflux, max_iter=10, max_sigma=outlier_sigma, mexc=mask)
         ofrac = (~omask).sum() / omask.size
         if ofrac < 0.25:
             mask &= omask
@@ -231,7 +231,7 @@ def detrend(dataset,campaign=5,splits=None,quiet=False,save_dir='.',seed=0,flux_
             mthf = ~(ds.quality & 2**20).astype(bool)            # Mask out the thruster firings
             minf = isfinite(cflux)
 
-            mlow, mhigh = sigma_clip(cflux, max_iter = 10, max_sigma = 5, separate_masks = True, mexc = mper&mthf)
+            mlow, mhigh = sigma_clip(cflux, max_iter = 10, max_sigma = outlier_sigma, separate_masks = True, mexc = mper&mthf)
             ds.mflags[iset][~minf]  |= M_NOTFINITE
             ds.mflags[iset][~mhigh]  |= M_OUTLIER_U
             ds.mflags[iset][~mlow]   |= M_OUTLIER_D
