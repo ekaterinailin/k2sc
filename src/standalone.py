@@ -123,8 +123,10 @@ def detrend(dataset,campaign=None,splits=None,quiet=False,save_dir='.',seed=0,fl
 
         ## Iterative sigma-clipping
         ## ------------------------
+
         print('Starting initial outlier detection at ' + str(max_sigma) + 'sigma.')
         omask = mask & sigma_clip(cflux, max_iter=10, max_sigma=max_sigma, mexc=mask)
+
         ofrac = (~omask).sum() / omask.size
         if ofrac < 0.25:
             mask &= omask
@@ -234,6 +236,7 @@ def detrend(dataset,campaign=None,splits=None,quiet=False,save_dir='.',seed=0,fl
             minf = isfinite(cflux)
 
             mlow, mhigh = sigma_clip(cflux, max_iter = 10, max_sigma = max_sigma, separate_masks = True, mexc = mper&mthf)
+
             ds.mflags[iset][~minf]  |= M_NOTFINITE
             ds.mflags[iset][~mhigh]  |= M_OUTLIER_U
             ds.mflags[iset][~mlow]   |= M_OUTLIER_D
