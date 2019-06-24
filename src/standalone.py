@@ -36,10 +36,10 @@ def psearch(time, flux, min_p, max_p):
     
     return period[j], fap
 
-def detrend(dataset,campaign=5,splits=None,quiet=False,save_dir='.',seed=0,flux_type='pdc',default_position_kernel='SqrExp',
+def detrend(dataset,campaign=None,splits=None,quiet=False,save_dir='.',seed=0,flux_type='pdc',default_position_kernel='SqrExp',
            kernel=None, kernel_period=None,p_mask_center=None,p_mask_period=None,p_mask_duration=None,
            tr_nrandom=400,tr_nblocks=6,tr_bspan=50,de_npop=100,de_niter=150,de_max_time=300,
-           ls_max_fap=-50,ls_min_period=0.05,ls_max_period=25,  outlier_sigma=5,outlier_mwidth=25):
+           ls_max_fap=-50,ls_min_period=0.05,ls_max_period=25,  max_sigma=5,outlier_mwidth=25):
     '''This is a function to detrend a single k2sc dataset, outside of the framework of 
     logging that is in bin/k2sc, but duplicating the functionality of the
     local function there 'detrend'. This is here to permit access to k2sc from lightkurve, or other
@@ -78,9 +78,20 @@ def detrend(dataset,campaign=5,splits=None,quiet=False,save_dir='.',seed=0,flux_
     ## Define the splits
     ## -----------------
 
-    default_splits = {3:[2154,2190], 4:[2240,2273], 5:[2344], 6:[2390,2428], 7:[2468.5,2515],13:[2998,3033]}
+    #default_splits = {3:[2154,2190], 4:[2240,2273], 5:[2344], 6:[2390,2428], 7:[2468.5,2515],13:[2998,3033]}
+    default_splits =  {0: [],
+                        3:[2154,2190], 
+                        4:[2240,2273], 
+                        5:[2344], 
+                        6:[2390,2428], 
+                        7:[2468.5,2515],
+                        13:[2998,3033],
+                        16 : [1520, 1522, 1580, 3030, 3031, 3041, 3230],
+                        18 : []}
 
-    if splits is None and ds.campaign not in default_splits.keys():
+    if campaign is not None:
+        splits = default_splits[campaign]
+    elif splits is None and ds.campaign not in default_splits.keys():
         print('The campaign not known and no splits given.')
         return 0
     elif splits is not None:
@@ -121,8 +132,8 @@ def detrend(dataset,campaign=5,splits=None,quiet=False,save_dir='.',seed=0,flux_
 
         ## Iterative sigma-clipping
         ## ------------------------
-        print('Starting initial outlier detection')
-        omask = mask & sigma_clip(cflux, max_iter=10, max_sigma=5, mexc=mask)
+        print('Starting initial outlier detection at ' + str(max_sigma) + 'sigma.')
+        omask = mask & sigma_clip(cflux, max_iter=10, max_sigma=max_sigma, mexc=mask)
         ofrac = (~omask).sum() / omask.size
         if ofrac < 0.25:
             mask &= omask
@@ -231,7 +242,7 @@ def detrend(dataset,campaign=5,splits=None,quiet=False,save_dir='.',seed=0,flux_
             mthf = ~(ds.quality & 2**20).astype(bool)            # Mask out the thruster firings
             minf = isfinite(cflux)
 
-            mlow, mhigh = sigma_clip(cflux, max_iter = 10, max_sigma = 5, separate_masks = True, mexc = mper&mthf)
+            mlow, mhigh = sigma_clip(cflux, max_iter = 10, max_sigma = max_sigma, separate_masks = True, mexc = mper&mthf)
             ds.mflags[iset][~minf]  |= M_NOTFINITE
             ds.mflags[iset][~mhigh]  |= M_OUTLIER_U
             ds.mflags[iset][~mlow]   |= M_OUTLIER_D
@@ -282,7 +293,7 @@ class k2sc_lc(lightkurve.KeplerLightCurve):
     lc.k2sc()
     '''
 
-    def get_k2data(self,campaign=5):
+    def get_k2data(self):
         try:
             x, y = self.pos_corr1, self.pos_corr2
         except:
@@ -297,12 +308,13 @@ class k2sc_lc(lightkurve.KeplerLightCurve):
                       y       = y,
                       primary_header = self.primary_header,
                       data_header = self.data_header,
-                      campaign=campaign)
+                      campaign=self.campaign)
         return dataset
 
     def k2sc(self,**kwargs):
         dataset = self.get_k2data()
         results = detrend(dataset,**kwargs) # see keyword arguments from detrend above
+        print(results)
         self.tr_position = results.tr_position
         self.tr_time = results.tr_time 
         self.pv = results.pv # hyperparameters 
