@@ -78,22 +78,13 @@ def detrend(dataset,campaign=None,splits=None,quiet=False,save_dir='.',seed=0,fl
     ## Define the splits
     ## -----------------
 
-    #default_splits = {3:[2154,2190], 4:[2240,2273], 5:[2344], 6:[2390,2428], 7:[2468.5,2515],13:[2998,3033]}
-    default_splits =  {0: [],
-                        3:[2154,2190], 
-                        4:[2240,2273], 
-                        5:[2344], 
-                        6:[2390,2428], 
-                        7:[2468.5,2515],
-                        13:[2998,3033],
-                        16 : [1520, 1522, 1580, 3030, 3031, 3041, 3230],
-                        18 : []}
+    default_splits = {0:[], 3:[2154,2190], 4:[2240,2273], 5:[2344], 6:[2390,2428], 7:[2468.5,2515],8:[2579,2598.5],102:[2778],11:[2830],12:[2915,2951],
+                      13:[2998,3033],14:[3085,3123.75],15:[3170,3207.5],16:[3297.5,3331],17:[3367,3400],18:[3425,3460]}
 
     if campaign is not None:
         splits = default_splits[campaign]
     elif splits is None and ds.campaign not in default_splits.keys():
         print('The campaign not known and no splits given.')
-        return 0
     elif splits is not None:
         splits = splits
         print('Using split values {:s} given from the command line'.format(str(splits)))
@@ -298,7 +289,7 @@ class k2sc_lc(lightkurve.KeplerLightCurve):
             x, y = self.pos_corr1, self.pos_corr2
         except:
             x, y = self.centroid_col, self.centroid_row
-        dataset = K2Data(self.keplerid,
+        dataset = K2Data(self.targetid,
                  time = self.time,
                       cadence = self.cadenceno,
                       quality = self.quality,
@@ -313,9 +304,11 @@ class k2sc_lc(lightkurve.KeplerLightCurve):
 
     def k2sc(self,**kwargs):
         dataset = self.get_k2data()
-        results = detrend(dataset,**kwargs) # see keyword arguments from detrend above
-        print(results)
+        results = detrend(dataset,campaign=self.campaign,**kwargs) # see keyword arguments from detrend above
         self.tr_position = results.tr_position
         self.tr_time = results.tr_time 
         self.pv = results.pv # hyperparameters 
         self.corr_flux = self.flux - self.tr_position + nanmedian(self.tr_position) 
+        self.cdpp_r = results.cdpp_r
+        self.cdpp_t = results.cdpp_t
+        self.cdpp_c = results.cdpp_c
