@@ -36,7 +36,6 @@ def sigma_clip(a, max_iter=10, max_sigma=5, separate_masks=False, mexc=None):
     
     # iteratively (with i) clip outliers above(below) (-)max_sigma *sig
     i, nm = 0, None
-    # How could you go into this loop more than once???
     while (nm != mask.sum()) and (i < max_iter):
         mask = mexc & mhigh & mlow
         nm = mask.sum()
@@ -45,10 +44,8 @@ def sigma_clip(a, max_iter=10, max_sigma=5, separate_masks=False, mexc=None):
         mlow[mexc]  = a[mexc] - med > -max_sigma*sig #indices of okay values below median
         i += 1
         mask = mexc & mhigh & mlow
-        print("iteration ", i, " with ", med, sig)
-        print(len(where(mhigh)[0]))
+        print("iteration {} at normalized median flux{:.5f} \pm {:.5f}".format(i, med, sig))
         mhigh = expand_mask(mhigh)
-        print(len(where(mhigh)[0]))
     if separate_masks:
         return mlow, mhigh
     else:

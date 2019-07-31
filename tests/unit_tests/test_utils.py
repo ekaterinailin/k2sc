@@ -6,8 +6,8 @@ import numpy.testing as npt
 from numpy import nan
 from numpy.random import normal
 
-#from k2sc.utils import *
-execfile('../../src/utils.py')
+from k2sc.utils import *
+#execfile('../../src/utils.py')
 
 class TestMedSig(unittest.TestCase):
     """Test the median and sigma calculation
@@ -37,6 +37,8 @@ class TestSigmaClip(unittest.TestCase):
         tmask = np.ones(self.npt, np.bool)
         tmask[self.badi] = 0
         m = sigma_clip(self.arr)
+        print(m)
+        print(tmask)
         npt.assert_array_equal(m,tmask)
 
 
@@ -49,8 +51,8 @@ class TestSigmaClip(unittest.TestCase):
         thig[[23,34]] = 0
         tlow[[6,76]] = 0
 
-        minf, mlow, mhig = sigma_clip(self.arr, separate_masks=True)
-        npt.assert_array_equal(minf,tinf)
+        mlow, mhig = sigma_clip(self.arr, separate_masks=True)
+        #npt.assert_array_equal(minf,tinf)
         npt.assert_array_equal(mlow,tlow)
         npt.assert_array_equal(mhig,thig)
 

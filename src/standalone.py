@@ -102,6 +102,7 @@ def detrend(dataset,campaign=None,splits=None,quiet=False,save_dir='.',seed=0,fl
     ## We carry out an initial outlier and period detection using
     ## a default GP hyperparameter vector based on campaign 4 fits
     ## done using (almost) nonprintrmative priors.
+    
 
     for iset in range(ds.nsets):
         flux = ds.fluxes[iset]
@@ -110,7 +111,6 @@ def detrend(dataset,campaign=None,splits=None,quiet=False,save_dir='.',seed=0,fl
         mask &= ~(ds.quality & 2**20).astype(bool)            # Mask out the thruster firings
         inputs = transpose([ds.time, ds.x, ds.y])
         masks.append(mask)
-
         detrender = Detrender(flux, inputs, mask = mask, splits = splits,
                               kernel = BasicKernelEP(),
                               tr_nrandom = tr_nrandom,
